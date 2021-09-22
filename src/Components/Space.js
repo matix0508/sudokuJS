@@ -10,6 +10,7 @@ export default function Space(props) {
                 value={props.value}
                 onKeyDown={props.onKeyDown}
                 onClick={props.changable && props.onClick}
+                onFocus={props.changable && props.onFocus}
                 >{props.value}</button>
         </div>
     )

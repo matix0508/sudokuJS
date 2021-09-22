@@ -57,6 +57,16 @@ function getSquares() {
   return output;
 }
 
+function findInvalid(items) {
+  let output = []
+  for (let i = 0; i < items.length; i++) {
+    if (items[i][1] > 1 && !output.includes(items[i][0])) {
+      output.push(items[i][0])
+    }
+  }
+  return output
+}
+
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -80,6 +90,11 @@ class App extends React.Component {
     this.handleClick = this.handleClick.bind(this)
     this.generateSpace = this.generateSpace.bind(this)
     this.generateSquare = this.generateSquare.bind(this)
+    this.checkGroup = this.checkGroup.bind(this)
+    this.checkCol = this.checkCol.bind(this)
+    this.checkRow = this.checkRow.bind(this)
+    this.checkValidity = this.checkValidity.bind(this)
+    console.log(this.state)
   }
 
   // componentDidMount() {
@@ -94,13 +109,19 @@ class App extends React.Component {
   }
 
   handleKeyDown(event) {
+    if (! '0123456789'.includes(event.key)) {
+      return
+    }
     let output = this.state.board;
     output[this.state.clickedSpace].value = this.extractInt(event.key)
     // console.log(event.key)
     this.setState({board: output})
+    this.checkValidity(this.state.clickedSpace)
+
   }
 
   handleClick(id) {
+    
     let new_board = this.state.board
     // new_board[0].clicked = true;
     // console.log(new_board[0].clicked)
@@ -112,6 +133,59 @@ class App extends React.Component {
     })
   }
 
+
+  checkGroup(lst) {
+    // console.log(lst)
+    const values = lst.map((i) => (this.state.board[i].value))
+    const map = values.reduce((acc, e) => acc.set(e, (acc.get(e) || 0) + 1), new Map());
+    const occurances = [...map.values()]
+    const ones = Array(occurances.length)
+    ones.fill(1);
+    if (occurances === ones){
+      return true;
+    }
+    const invalids = findInvalid([...map.entries()]);
+    let newBoard = this.state.board;
+    for (let i = 0; i < 9; i++) {
+      if (invalids.includes(newBoard[lst[i]].value)) {
+        newBoard[lst[i]].invalid = true;
+      } else {
+        newBoard[lst[i]].invalid = false;
+      }
+    }
+    this.setState({board: newBoard})
+    return false;
+    
+  }
+
+  checkRow(id) {
+    const row = this.state.rows[id]
+    // console.log()
+    return this.checkGroup(row);
+  }
+
+  checkCol(id) {
+    // console.log("COL")
+    const col = this.state.cols[id]
+    console.log(this.state.cols)
+    return this.checkGroup(col)
+  }
+
+  checkSquare(id) {
+    const square = this.state.squares[id]
+    console.log(square)
+    return this.checkGroup(square)
+  }
+
+  checkValidity(id) {
+    const bool1 = this.checkCol(getCol(id))
+    const bool2 = this.checkRow(getRow(id))
+    const bool3 = this.checkSquare(getSquare(id))
+    let newBoard = this.state.board;
+    newBoard[id].invalid = bool1 || bool2 || bool3;
+    this.setState({board: newBoard})
+
+  }
 
 
 
@@ -125,6 +199,7 @@ class App extends React.Component {
       value={space.value}
       invalid={space.invalid}
       onClick={() => (this.handleClick(space.id))}
+      onFocus={() => this.handleClick(space.id)}
     />
     )
   }
